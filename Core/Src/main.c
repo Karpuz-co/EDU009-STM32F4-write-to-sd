@@ -49,6 +49,11 @@ DMA_HandleTypeDef hdma_sdio_tx;
 SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart1;
+FATFS FatFs;
+FIL file;
+uint8_t buffer[32];
+// Write numbers to the SD card every 1000 ms
+uint32_t num = 0;
 
 /* USER CODE BEGIN PV */
 
@@ -104,20 +109,20 @@ int main(void)
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  FATFS myFATAFS;
-  FIL myFILE;
-  UINT testByte;
-  if (f_mount(&myFATAFS, SDPath, 1) == FR_OK) {
-	  HAL_GPIO_TogglePin(led_1_GPIO_Port, led_1_Pin);
-	  char myPath[] = "WRITE1.TXT\0";
-	  f_open(&myFILE, myPath , FA_WRITE | FA_OPEN_EXISTING);
-	  char myData[] = "hello ";
-	  f_write(&myFILE , myData, sizeof(myData),&testByte );
+  if (f_mount(&FatFs, "", 0) != FR_OK) {
+          Error_Handler();
+      }
+/*
+      // Create a new file on the SD card
+      if (f_open(&file, "data.txt", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) {
+          Error_Handler();
+      }
+      // Close the file
+      f_close(&file);
+      */
 
-	  f_close(&myFILE);
-	  HAL_Delay(1000);
-	  HAL_GPIO_TogglePin(led_1_GPIO_Port, led_1_Pin);
-}
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -127,6 +132,39 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  HAL_GPIO_WritePin(led_1_GPIO_Port, led_1_Pin, 1);
+	  if (BSP_SD_IsDetected() == SD_PRESENT){
+		  // Open the file for writing
+		  	  if(f_open(&file, "data.txt", FA_WRITE | FA_OPEN_ALWAYS| FA_OPEN_APPEND) != FR_OK) {
+		  		  //the code inside here will be changed
+		  		  if (f_mount(&FatFs, "", 1) != FR_OK) {
+		  		            //Error_Handler();
+		  			if (f_mount(&FatFs, "", 0) != FR_OK) {
+		  					  		            //Error_Handler();
+		  					  		        }
+		  		        }
+		  	      //Error_Handler();
+		  	  }
+		  	  // Convert the number to a string
+		  	  sprintf((char*)buffer, "%lu\n", num);
+
+		  	  // Write the string to the file
+		  	  UINT bytes_written;
+		  	  if (f_write(&file, buffer, strlen((char*)buffer), &bytes_written) != FR_OK) {
+		  		  //Error_Handler();
+		  	  }
+		  	  // Close the file
+		  	  f_close(&file);
+		  	  HAL_GPIO_WritePin(led_1_GPIO_Port, led_1_Pin, 0);
+
+		  	  // Increment the number
+		  	  num++;
+
+		  	  // Delay for 1000 ms
+
+	  }
+
+	  HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
