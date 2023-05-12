@@ -112,14 +112,14 @@ int main(void)
   if (f_mount(&FatFs, "", 0) != FR_OK) {
           Error_Handler();
       }
-/*
+
       // Create a new file on the SD card
       if (f_open(&file, "data.txt", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) {
           Error_Handler();
       }
       // Close the file
       f_close(&file);
-      */
+
 
 
 
